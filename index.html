@@ -1,81 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
+<meta charset="utf-8" />
 <title>CS2 Map Simulator</title>
+
 <style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #0f0f0f;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
+body {
+  margin: 0;
+  background: #111;
+  color: white;
+  font-family: Arial;
+}
 
-  header {
-    padding: 10px;
-    background: #1a1a1a;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
+header {
+  padding: 10px;
+  display: flex;
+  gap: 8px;
+  background: #1c1c1c;
+  flex-wrap: wrap;
+}
 
-  button {
-    padding: 8px 12px;
-    border: none;
-    cursor: pointer;
-    background: #333;
-    color: white;
-    border-radius: 6px;
-  }
+button {
+  padding: 8px;
+  border: 0;
+  background: #333;
+  color: white;
+  cursor: pointer;
+  border-radius: 6px;
+}
 
-  button:hover {
-    background: #555;
-  }
+#map {
+  position: relative;
+  height: calc(100vh - 60px);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
 
-  #map {
-    flex: 1;
-    position: relative;
-    background: #222;
-    overflow: hidden;
-  }
+.player {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  position: absolute;
+  cursor: grab;
+}
 
-  /* simple visual difference per map */
-  .ancient { background: #2d3b2f; }
-  .anubis { background: #2b2f3b; }
-  .dust2 { background: #3b352b; }
-  .mirage { background: #3b2f2f; }
-  .inferno { background: #3b2a2a; }
-  .overpass { background: #2a3b3b; }
-  .nuke { background: #2f2f3b; }
-
-  .player {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    position: absolute;
-    cursor: grab;
-    border: 2px solid rgba(255,255,255,0.3);
-  }
-
-  .t {
-    background: yellow;
-  }
-
-  .ct {
-    background: dodgerblue;
-  }
-
-  .label {
-    position: absolute;
-    top: 5px;
-    left: 10px;
-    opacity: 0.7;
-  }
+.t { background: yellow; }
+.ct { background: dodgerblue; }
 </style>
 </head>
+
 <body>
 
 <header>
@@ -88,83 +62,69 @@
   <button onclick="setMap('nuke')">Nuke</button>
 </header>
 
-<div id="map" class="mirage">
-  <div class="label" id="mapLabel">Mirage</div>
-</div>
+<div id="map"></div>
 
 <script>
 const map = document.getElementById("map");
-const label = document.getElementById("mapLabel");
 
 const maps = {
-  ancient: "Ancient",
-  anubis: "Anubis",
-  dust2: "Dust II",
-  mirage: "Mirage",
-  inferno: "Inferno",
-  overpass: "Overpass",
-  nuke: "Nuke"
+  ancient: "maps/ancient.webp",
+  anubis: "maps/anubis.webp",
+  dust2: "maps/dust2.webp",
+  mirage: "maps/mirage.webp",
+  inferno: "maps/inferno.webp",
+  overpass: "maps/overpass.webp",
+  nuke: "maps/nuke.webp"
 };
 
 function setMap(name) {
-  map.className = name;
-  label.textContent = maps[name];
+  map.style.backgroundImage = `url('${maps[name]}')`;
 }
 
-/* create 10 players */
-const players = [];
-
+/* draggable player system */
 function createPlayer(type, x, y) {
   const el = document.createElement("div");
-  el.classList.add("player", type);
+  el.className = `player ${type}`;
   el.style.left = x + "px";
   el.style.top = y + "px";
-
   map.appendChild(el);
 
-  let dragging = false;
-  let offsetX = 0;
-  let offsetY = 0;
+  let drag = false;
+  let ox = 0, oy = 0;
 
   el.addEventListener("mousedown", (e) => {
-    dragging = true;
-    offsetX = e.clientX - el.offsetLeft;
-    offsetY = e.clientY - el.offsetTop;
-    el.style.cursor = "grabbing";
+    drag = true;
+    ox = e.clientX - el.offsetLeft;
+    oy = e.clientY - el.offsetTop;
   });
 
   document.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
+    if (!drag) return;
 
-    let x = e.clientX - offsetX;
-    let y = e.clientY - offsetY;
-
-    // keep inside map
     const rect = map.getBoundingClientRect();
-    x = Math.max(0, Math.min(rect.width - 22, x));
-    y = Math.max(0, Math.min(rect.height - 22, y));
+
+    let x = e.clientX - rect.left - ox;
+    let y = e.clientY - rect.top - oy;
 
     el.style.left = x + "px";
     el.style.top = y + "px";
   });
 
-  document.addEventListener("mouseup", () => {
-    dragging = false;
-    el.style.cursor = "grab";
-  });
-
-  players.push(el);
+  document.addEventListener("mouseup", () => drag = false);
 }
 
-/* spawn CTs */
+/* 5 CT */
 for (let i = 0; i < 5; i++) {
-  createPlayer("ct", 50 + i * 30, 80);
+  createPlayer("ct", 60 + i * 25, 80);
 }
 
-/* spawn Ts */
+/* 5 T */
 for (let i = 0; i < 5; i++) {
-  createPlayer("t", 50 + i * 30, 200);
+  createPlayer("t", 60 + i * 25, 200);
 }
+
+/* default map */
+setMap("mirage");
 </script>
 
 </body>
